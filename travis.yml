@@ -1,0 +1,23 @@
+sudeo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t beastlee23/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true beastlee23/react-test npm run test
+
+after_success:
+    - docker build -t beastlee23/multi-client ./client
+    - docker build -t beastlee23/multi-nginx ./nginx
+    - docker build -t beastlee23/multi-server ./server
+    - docker build -t beastlee23/multi-worker ./worker
+
+    #Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    #Take images and push them to docker hub
+    - docker push beastlee23/multi-client
+    - docker push beastlee23/multi-nginx
+    - docker push beastlee23/multi-server
+    - docker push beastlee23/multi-worker
